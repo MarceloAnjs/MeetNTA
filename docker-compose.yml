@@ -1,0 +1,47 @@
+version: "3"
+
+services:
+    backend: 
+        command: yarn dev  
+        build:
+            context: ./backend
+            dockerfile: ./Dockerfile
+        container_name: api_${NODE_ENV}
+        restart: always        
+        ports: 
+            - ${NODE_INTERNAL_PORT}:${NODE_EXTERNAL_PORT}
+        links: 
+            - mongo 
+        networks: 
+            - mdb-network
+    mongo: 
+        container_name: mongo_${NODE_ENV}
+        restart: always
+        image: mongo
+        volumes: 
+            - ./data:/data/db 
+        ports: 
+            - ${MONGO_INTERNAL_PORT}:${MONGO_EXTERNAL_PORT}
+        networks:             
+            - mdb-network
+        healthcheck:
+            test: test $$(echo "rs.initiate().ok || rs.status().ok" | mongo --quiet) -eq 1
+            interval: 10s
+            start_period: 30s
+        command: ["--replSet", "myRepl", "--bind_ip_all"]
+
+    frontend:
+        command: yarn dev  
+        build:
+            context: ./frontend
+            dockerfile: ./Dockerfile
+        ports:
+            - "3000:3000"
+        links:
+            - "backend"              
+        networks: 
+            - mdb-network
+        stdin_open: true
+networks:
+    mdb-network:
+        driver: bridge
