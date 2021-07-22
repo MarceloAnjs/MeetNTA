@@ -108,7 +108,7 @@ Clone this project repository:
 
 
 
-$ git clone https://
+$ git clone https://github.com/AugustoZanoni/MeetNTA
 
 
 
